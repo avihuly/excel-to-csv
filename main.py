@@ -6,8 +6,9 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import io
 from apiclient.http import MediaIoBaseDownload
+import csv
 
-SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly']
+SCOPES = ['https://www.googleapis.com/auth/drive','https://www.googleapis.com/auth/drive.file','https://www.googleapis.com/auth/drive.readonly']
 
 creds = None
 # The file token.pickle stores the user's access and refresh tokens, and is
@@ -28,15 +29,29 @@ if not creds or not creds.valid:
 	with open('token.pickle', 'wb') as token:
 		pickle.dump(creds, token)
 
-drive_service = build('drive', 'v3', credentials=creds)
-
-
+drive_service = build('drive', 'v3', credentials=creds)	
+	
 file_id = '12os_T3UqgOYsIjrelcq9VyIz7gAiT3uwV2h5zaTUa74'
-fileRequest = drive_service.files().export_media(fileId=file_id,
-                                             mimeType='application/pdf')
-fh = io.BytesIO()
-downloader = MediaIoBaseDownload(fh, fileRequest)
+request = drive_service.files().export_media(fileId=file_id, mimeType='text/csv')
+# AS File
+fh = io.FileIO('cards.csv', 'wb')
+downloader = MediaIoBaseDownload(fh, request)
 done = False
 while done is False:
-    status, done = downloader.next_chunk()
-    print ("Download %d%%." % int(status.progress() * 100))
+	status, done = downloader.next_chunk()
+	print ("Download %d%%." % int(status.progress() * 100))
+
+# AS BytesIO
+#fh = io.BytesIO()
+#downloader = MediaIoBaseDownload(fh, request)
+#done = False
+#while done is False:
+#    status, done = downloader.next_chunk()
+#    print ("Download %d%%." % int(status.progress() * 100))
+
+transaction = []
+
+with open('cards.csv', 'r',encoding="utf-8") as f:
+    reader = csv.reader(f)
+    for row in reader:
+        print(row)
