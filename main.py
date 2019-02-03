@@ -7,6 +7,16 @@ from google.auth.transport.requests import Request
 import io
 from apiclient.http import MediaIoBaseDownload
 import csv
+import yaml
+
+class Transaction:
+	def __init__(self, card, date, business_name, amount_total, amount_charged, notes):
+		self.card = card
+		self.date = date
+		self.business_name = business_name
+		self.amount_charged = amount_charged
+		self.amount_total = amount_total
+		self.notes = notes
 
 SCOPES = ['https://www.googleapis.com/auth/drive','https://www.googleapis.com/auth/drive.file','https://www.googleapis.com/auth/drive.readonly']
 
@@ -41,17 +51,36 @@ while done is False:
 	status, done = downloader.next_chunk()
 	print ("Download %d%%." % int(status.progress() * 100))
 
-# AS BytesIO
-#fh = io.BytesIO()
-#downloader = MediaIoBaseDownload(fh, request)
-#done = False
-#while done is False:
-#    status, done = downloader.next_chunk()
-#    print ("Download %d%%." % int(status.progress() * 100))
 
-transaction = []
-
+transactions = []
 with open('cards.csv', 'r',encoding="utf-8") as f:
     reader = csv.reader(f)
     for row in reader:
         print(row)
+        transactions.append(Transaction(row[0], row[1], row[2], row[3], row[4], row[5]))
+
+print("******************")				
+print("End of init reader")		
+print("******************")		
+print()
+print()
+print()
+		
+with open("productTypes.yaml", 'r', encoding="utf-8") as productTypesYaml:
+    productTypes = yaml.load(productTypesYaml)
+		
+for transaction in transactions:
+    for productType in productTypes:
+        for identifier in productTypes[productType]:
+            if (identifier in transaction.business_name) or (identifier == transaction.business_name):
+                transaction.type = productType
+                print(transaction.__dict__)
+				
+   
+
+
+
+
+
+
+
