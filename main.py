@@ -8,8 +8,10 @@ import io
 from apiclient.http import MediaIoBaseDownload
 import csv
 import yaml
+import json
 
 class Transaction:
+	type = "else"
 	def __init__(self, card, date, business_name, amount_total, amount_charged, notes):
 		self.card = card
 		self.date = date
@@ -43,7 +45,6 @@ drive_service = build('drive', 'v3', credentials=creds)
 	
 file_id = '12os_T3UqgOYsIjrelcq9VyIz7gAiT3uwV2h5zaTUa74'
 request = drive_service.files().export_media(fileId=file_id, mimeType='text/csv')
-# AS File
 fh = io.FileIO('cards.csv', 'wb')
 downloader = MediaIoBaseDownload(fh, request)
 done = False
@@ -59,28 +60,25 @@ with open('cards.csv', 'r',encoding="utf-8") as f:
         print(row)
         transactions.append(Transaction(row[0], row[1], row[2], row[3], row[4], row[5]))
 
+print()
 print("******************")				
 print("End of init reader")		
 print("******************")		
 print()
-print()
-print()
-		
+
+# Load configurtion
 with open("productTypes.yaml", 'r', encoding="utf-8") as productTypesYaml:
-    productTypes = yaml.load(productTypesYaml)
-		
+    productTypes = yaml.load(productTypesYaml)	
+
+transactionDictList = []
 for transaction in transactions:
     for productType in productTypes:
         for identifier in productTypes[productType]:
             if (identifier in transaction.business_name) or (identifier == transaction.business_name):
                 transaction.type = productType
                 print(transaction.__dict__)
-				
-   
-
-
-
-
-
-
-
+    transactionDictList.append(transaction.__dict__)
+	
+with open("cards.json", "w",encoding="UTF-8") as f:
+    f.write(json.dumps(transactionDictList, ensure_ascii=False))
+	
