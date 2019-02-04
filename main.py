@@ -11,7 +11,6 @@ import yaml
 import json
 
 class Transaction:
-	type = "else"
 	def __init__(self, card, date, business_name, amount_total, amount_charged, notes):
 		self.card = card
 		self.date = date
@@ -19,6 +18,7 @@ class Transaction:
 		self.amount_charged = amount_charged
 		self.amount_total = amount_total
 		self.notes = notes
+		self.type = "else"
 
 SCOPES = ['https://www.googleapis.com/auth/drive','https://www.googleapis.com/auth/drive.file','https://www.googleapis.com/auth/drive.readonly']
 
@@ -72,13 +72,20 @@ with open("productTypes.yaml", 'r', encoding="utf-8") as productTypesYaml:
 
 transactionDictList = []
 for transaction in transactions:
-    for productType in productTypes:
-        for identifier in productTypes[productType]:
-            if (identifier in transaction.business_name) or (identifier == transaction.business_name):
-                transaction.type = productType
-                print(transaction.__dict__)
-    transactionDictList.append(transaction.__dict__)
-	
+    # Identify transaction type
+	for productType in productTypes:
+		for identifier in productTypes[productType]:
+			if (identifier in transaction.business_name) or (identifier == transaction.business_name):
+			    transaction.type = productType
+    # remove Currency sign
+	transaction.amount_charged = transaction.amount_charged.replace('₪ ', '')
+	transaction.amount_total = transaction.amount_total.replace('₪ ', '')
+	# Add transaction dict to list
+	transactionDictList.append(transaction.__dict__)
+	print(transaction.__dict__)
+transactionDictList.pop(0)
+
+# Write transaction dict list as a JSON Array file
 with open("cards.json", "w",encoding="UTF-8") as f:
     f.write(json.dumps(transactionDictList, ensure_ascii=False))
 	
